@@ -1,0 +1,133 @@
+{% extends "venta/base_venta.html" %}
+
+{% load  static %}
+
+{% block panel-content %}
+
+<div class="grid-x grid-margin-x">
+  <div class="cell grid-x grid-margin-x">
+    <form class="cell small-7 input-group" method="POST">{% csrf_token %}
+      <span class="input-group-label">COD/CAN:</span>
+      <input type="text" id="code" name="code_table" placeholder="Código">
+      {% for error in form.code.errors %}
+        <p class="cell" style="color: red;">
+          {{ error|escape }}
+        </p>
+      {% endfor %}
+      <div class="input-group-button">
+        <input type="submit" class="button secondary" value="Obtener">
+      </div>
+    </form>
+    <div class="cell small-2">
+      <a class="cell hollow button secondary" href="{% url 'venta_app:venta-list' %}">
+        <i class="fi-trash"></i>
+        <span>Ultimas Ventas</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="grid-x grid-margin-x" style="padding: 1.5em;">
+    <!-- contendor de la lista de productos en venta -->
+    <div class="cell medium-8">
+      <h5 class="cell"> Productos en Venta</h5>
+      <table class="hover">
+        <thead>
+          <th width="200">COD</th>
+          <th width="250">Nombres</th>
+          <th width="120">Precio ($/)</th>
+          <th width="100">Cantidad</th>
+          <th>Acciones</th>
+          <th></th>
+        </thead>
+        <tbody>
+            {% for detalle in detalles_venta %}
+            <tr>
+              <td>{{ detalle.product.code }}</td>
+              <td>{{ detalle.product.name }}</td>
+              <td>{{ detalle.product.sale_price }}</td>
+              <td>{{ detalle.count }} {{ detalle.product.get_unit_display }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- contiene los resultados resltantes -->
+    <div class="cell medium-4">
+      <div class="callout success" style="text-align: center;">
+        <h5>Total a Cobrar:</h5>
+        <h2> Bs/ {{ total_bs }} </h2>
+        <h2> $/ {{ total }} </h2>
+      </div>
+      <button data-open="exampleModal1" class="cell button success" style="padding: 1.5em;">
+        <i class="fi-print"></i>
+          <span>Cobrar</span>
+      </button>
+
+      
+      {% if venta %}
+      <form class="cell" action="{% url 'venta_app:venta-delete' venta.id %}" method="POST">{% csrf_token %}
+        <button type="submit" class="cell hollow button alert">
+          <i class="fi-trash"></i>
+          <span>Cancelar Venta</span>
+        </button>
+      </form>
+      {% endif %}
+        
+    </div>
+
+  </div>
+
+  <!-- modal para el cobrar con comprobante de pago -->
+  <div class="reveal" id="exampleModal1" data-reveal>
+    <h3>Detalle del comprobante de pago</h3>
+    <form action="{% url 'venta_app:venta' %}" class="grid-x grid-margin-x" 
+      method="POST">{% csrf_token %}
+      <div class="cell medium-6">
+        <label>Tipo de Pago:</label>
+        <div class="input-group">
+          <span class="input-group-label"><i class="fi-credit-card"></i></span>
+          <select name="type_payment" id="type_payment">
+            <option value="0">Tarjeta</option>
+            <option value="1">Cash</option>
+            <option value="2">Bono</option>
+            <option value="3">Otro</option>
+          </select>
+        </div>
+        {% for error in form.type_payment.errors %}
+          <p class="cell" style="color: red;">
+            {{ error|escape }}
+          </p>
+        {% endfor %}
+      </div>
+      <div class="cell medium-6">
+        <label>Tipo de Comprobante:</label>
+        <div class="input-group">
+          <span class="input-group-label"><i class="fi-archive"></i></span>
+          <select name="type_invoce" id="type_invoce">
+            <option value="0">Boleta</option>
+            <option value="1">Factura</option>
+            <option value="2">Sin Comprobante</option>
+          </select>
+        </div>
+        {% for error in form.type_invoce.errors %}
+          <p class="cell" style="color: red;">
+            {{ error|escape }}
+          </p>
+        {% endfor %}
+      </div>
+      <div class="cell medium-9">
+        <label>Cliente:</label>
+        <div class="input-group">
+          <input name="cliente" type="text">
+        </div>
+      </div>
+      <input type="text" name="venta" id="venta" value="{{venta.id}}" style="display: none;">
+
+      <button type="submit" class="cell success button">Pagar</button>
+    </form>
+  </div>
+
+</div>
+
+{% endblock panel-content %}

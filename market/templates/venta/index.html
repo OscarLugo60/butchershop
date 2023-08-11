@@ -1,0 +1,112 @@
+{% extends "venta/base_venta.html" %}
+
+{% load  static %}
+
+{% block panel-content %}
+
+  <div id="app">
+    <div class="cell grid-x grid-margin-x">
+      <form class="cell small-7 input-group margin-x" method="POST" style="margin-bottom: 0;">{% csrf_token %}
+        <span class="input-group-label">COD/CAN:</span>
+        {{ form.code }}
+        {{ form.count }}
+        <div class="input-group-button">
+          <input type="submit" class="button secondary" value="Agregar">
+        </div>
+      </form>
+      {% for error in form.count.errors %}
+        <p class="cell" style="color: red;">
+          {{ error|escape }}
+        </p>
+      {% endfor %}
+    </div>
+    <div class="options"> <!-- Container. Resultados de autocompletado-->
+      <ul v-for="articulo in lista_articulos" class="result-list">
+          <li v-on:click="seleccionar(articulo.code)" class="text-result">
+              <p>{$ articulo.code $} - {$ articulo.name $}, {$ articulo.count $} {$ articulo.get_unit_display $}</p>
+          </li>
+      </ul>
+    </div>
+  
+
+    <div class="grid-x grid-margin-x" style="padding: 1.5em;">
+      <!-- contendor de la lista de productos en venta -->
+      <div class="cell medium-8">
+        <h5 class="cell"> Productos en Venta</h5>
+        <table class="hover">
+          <thead>
+            <th width="200">COD</th>
+            <th width="250">Nombres</th>
+            <th width="120">Precio de venta ($/)</th>
+            <th width="100">Cantidad</th>
+            <th width="120">Precio ($/)</th>
+            <th>Acciones</th>
+            <th></th>
+          </thead>
+          <tbody>
+              <tr v-for="carro in lista_carrito" :key="carro.id">
+                <td>{$ carro.product.code $}</td>
+                <td>{$ carro.product.name $}</td>
+                <td>{$ carro.product.sale_price $} $</td>
+                <td>{$ carro.count $} {$ carro.product.get_unit_display $}</td>
+                <td>{$ carro.product.sale_price * carro.count $} $</td>
+                <td>
+                  <button @click="abrirModalEditar(carro)" class="button primary"><i class="fi-pencil"></i></button>
+                </td>
+                <td>
+                  <button @click="eliminarCarro(carro.id)" class="button alert"><i class="fi-trash"></i></button>
+                </td>
+              </tr>
+          </tbody>
+        </table>
+      </div>
+
+
+      <!-- contiene los resultados resltantes -->
+      <div class="cell medium-4">
+        <form class="cell" action="{% url 'venta_app:venta-simple' %}" method="POST">{% csrf_token %}
+          <label for="code_table">Código de tarjeta:</label>
+          {{ form_carga.code_table }}
+          <button type="submit" class="cell button primery" style="padding: 1.5em;">
+            <i class="fi-credit-card"></i>
+            <span>Terminar Venta</span>
+          </button>
+        </form>
+        <div class="callout success" style="text-align: center;">
+          <h5>Total a Cobrar:</h5>
+          <h2> Bs/ {$ actualizarTotal() * 30 $} </h2>
+          <h2> $/ {$ actualizarTotal() $} </h2>
+        </div>
+
+        <br>
+
+        <form class="cell" action="{% url 'venta_app:carshop-delete_all' %}" method="POST">{% csrf_token %}
+          <button type="submit" class="cell hollow button alert">
+            <i class="fi-trash"></i>
+            <span>Limpiar Todo</span>
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+    <div id="modal" class="modal" v-show="mostrarModal">
+      <div class="modal-content">
+        <h2>Editar cantidad</h2>
+        <form @submit.prevent="guardarCantidad">
+          <p v-if="articuloSeleccionado">Cantidad actual: {$articuloSeleccionado.count$} {$articuloSeleccionado.product.get_unit_display$}</p>
+          <label  for="cantidad">Nueva Cantidad:</label>
+          <input type="number" v-model="nuevaCantidad" step="0.1" id="cantidad" required>
+          <button type="submit" class="btnSave" @click="guardarCantidad(articuloSeleccionado.id, nuevaCantidad)">Guardar</button>
+          <button type="button" class="btnCancel" @click="cerrarModal">Cancelar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+{% endblock panel-content %}
+{% block js %}
+<script src="{% static 'vue/vue.js' %}"></script>
+<script src="{% static 'vue/axios.min.js' %}"></script>
+<script src="{% static 'vue/apps/resultados.js' %}"></script>
+{% endblock js %}
