@@ -1,2 +1,2 @@
-# butchershop
-System for a Butcher Shop
+# djmarket
+proyecto final curso profesional Django 
